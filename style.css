@@ -1,0 +1,137 @@
+*{ margin:0; padding:0; box-sizing:border-box; }
+html, body{ min-height:100%; }
+body{
+  font-family:'Lexend', sans-serif;
+  color:#7dd3fc;
+  background:#0a1128;
+}
+
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:18px 28px;
+  border-bottom:1px solid #1c3a5e;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-decoration:none;
+  color:#7dd3fc;
+  font-weight:600;
+  font-size:1.15rem;
+}
+.brand span{
+  font-weight:400;
+  font-size:0.8rem;
+  color:#4fb3e8;
+  opacity:0.8;
+}
+nav{ display:flex; gap:22px; }
+nav a{
+  color:#a9dffb;
+  text-decoration:none;
+  font-size:0.9rem;
+}
+nav a:hover{ color:#7dd3fc; text-decoration:underline; }
+
+.page{
+  max-width:720px;
+  margin:0 auto;
+  padding:48px 24px 80px;
+}
+
+h1{
+  font-size:1.7rem;
+  font-weight:700;
+  color:#7dd3fc;
+  margin-bottom:6px;
+  letter-spacing:-0.02em;
+}
+.subtitle{
+  color:#a9dffb;
+  opacity:0.7;
+  font-size:0.95rem;
+  margin-bottom:28px;
+  line-height:1.45;
+}
+
+.search-wrap{
+  margin-bottom:28px;
+}
+.search-wrap input{
+  width:100%;
+  padding:12px 14px;
+  font-family:'Lexend', sans-serif;
+  font-size:0.95rem;
+  color:#7dd3fc;
+  background:#0f1c33;
+  border:1px solid #1c3a5e;
+  border-radius:8px;
+  outline:none;
+}
+.search-wrap input::placeholder{
+  color:#4fb3e8;
+  opacity:0.6;
+}
+.search-wrap input:focus{
+  border-color:#4fb3e8;
+}
+
+.tool-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.tool{
+  display:block;
+  padding:16px 18px;
+  background:#0f1c33;
+  border:1px solid #1c3a5e;
+  border-radius:8px;
+  text-decoration:none;
+  color:inherit;
+  transition:border-color 0.15s;
+}
+.tool:hover{
+  border-color:#4fb3e8;
+}
+.tool .name{
+  font-size:1.05rem;
+  font-weight:600;
+  color:#7dd3fc;
+  margin-bottom:3px;
+}
+.tool .desc{
+  font-size:0.85rem;
+  color:#a9dffb;
+  opacity:0.85;
+  line-height:1.4;
+}
+.tool .path{
+  font-size:0.78rem;
+  color:#4fb3e8;
+  margin-top:6px;
+  opacity:0.7;
+}
+
+.empty{
+  color:#4fb3e8;
+  opacity:0.65;
+  font-size:0.9rem;
+  padding:8px 0;
+}
+
+footer{
+  max-width:720px;
+  margin:0 auto;
+  padding:0 24px 40px;
+  font-size:0.8rem;
+  color:#4fb3e8;
+  opacity:0.55;
+}
+footer a{
+  color:#4fb3e8;
+}
