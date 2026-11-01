@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aplite</title>
+<link rel="icon" href="/favicon.png">
+<link href="https://fonts.bunny.net/css?family=lexend:400,500,600,700" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <a href="/" class="brand">
+      Aplite
+      <span>public tools</span>
+    </a>
+  </header>
+
+  <div class="page">
+    <h1>Tools</h1>
+    <p class="subtitle">small public tools. type to filter.</p>
+
+    <div class="search-wrap">
+      <input type="text" id="search" placeholder="search tools..." autocomplete="off" spellcheck="false">
+    </div>
+
+    <div id="list" class="tool-list">
+      <div class="empty">loading...</div>
+    </div>
+  </div>
+
+  <footer>
+    part of <a href="https://kpakorigins.site">kpakorigins</a>
+  </footer>
+
+<script>
+  // ========== CONFIG ==========
+  const GITHUB_OWNER = "originabsence";
+  const GITHUB_REPO  = "aplite-web";
+  const TOOLS_PATH   = "otools";
+  // ============================
+
+  const listEl   = document.getElementById('list');
+  const searchEl = document.getElementById('search');
+  let tools = [];
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function render(filter = '') {
+    const q = filter.trim().toLowerCase();
+    const filtered = tools.filter(t => {
+      if (!q) return true;
+      return t.name.toLowerCase().includes(q);
+    });
+
+    if (!filtered.length) {
+      listEl.innerHTML = '<div class="empty">no tools match</div>';
+      return;
+    }
+
+    listEl.innerHTML = '';
+    filtered.forEach(t => {
+      const a = document.createElement('a');
+      a.className = 'tool';
+      a.href = t.path;
+      a.innerHTML =
+        '<div class="name">' + escapeHtml(t.name) + '</div>' +
+        '<div class="path">' + escapeHtml(t.path) + '</div>';
+      listEl.appendChild(a);
+    });
+  }
+
+  async function loadTools() {
+    const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${TOOLS_PATH}`;
+
+    try {
+      const res = await fetch(url, {
+        headers: { "Accept": "application/vnd.github.v3+json" }
+      });
+
+      if (!res.ok) {
+        throw new Error(`GitHub API ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      tools = data
+        .filter(item => item.type === "dir")
+        .map(item => ({
+          name: item.name,
+          path: `/${TOOLS_PATH}/${item.name}/`
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      render();
+    } catch (err) {
+      console.error(err);
+      listEl.innerHTML = '<div class="empty">could not load tools from GitHub</div>';
+    }
+  }
+
+  searchEl.addEventListener('input', () => render(searchEl.value));
+  loadTools();
+</script>
+</body>
+</html>
