@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aplite Editor</title>
+<meta http-equiv="Cache-Control" content="max-age=31536000, immutable">
+<style>
+  html, body {
+    margin: 0; height: 100%;
+    background: #0a1128; color: #7dd3fc;
+    font-family: system-ui, sans-serif;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .msg { opacity: 0.7; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="msg" id="msg">loading editor…</div>
+
+<script>
+(function () {
+  const CACHE_KEY = 'aplite.editor.codehtml';
+  const CODE_URL  = 'code.html';
+
+  const msg = document.getElementById('msg');
+
+  function show(html) {
+    document.open();
+    document.write(html);
+    document.close();
+  }
+
+  function fromCache() {
+    try { return localStorage.getItem(CACHE_KEY); }
+    catch (e) { return null; }
+  }
+
+  function toCache(html) {
+    try { localStorage.setItem(CACHE_KEY, html); }
+    catch (e) {}
+  }
+
+  async function boot() {
+    try {
+      const res = await fetch(CODE_URL, { cache: 'no-cache' });
+      if (res.ok) {
+        const html = await res.text();
+        toCache(html);
+        show(html);
+        return;
+      }
+    } catch (e) {}
+
+    const cached = fromCache();
+    if (cached) {
+      show(cached);
+      return;
+    }
+
+    msg.textContent = 'editor unavailable (offline and no cache)';
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
