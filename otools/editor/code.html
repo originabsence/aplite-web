@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aplite Editor</title>
+<style>
+  @font-face {
+    font-family: 'Lexend';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Lexend'), local('Lexend-Regular');
+  }
+  @font-face {
+    font-family: 'Lexend';
+    font-style: normal;
+    font-weight: 600;
+    src: local('Lexend SemiBold'), local('Lexend-SemiBold');
+  }
+
+  :root {
+    --bg: #0a1128;
+    --panel: #0f1c33;
+    --panel2: #101f38;
+    --border: #1c3a5e;
+    --sky: #7dd3fc;
+    --sky2: #4fb3e8;
+    --sky3: #a9dffb;
+    --danger: #fca5a5;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--sky3); font-family: 'Lexend', system-ui, sans-serif; }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 48px;
+    padding: 0 14px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .brand {
+    font-weight: 600;
+    color: var(--sky);
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+  .brand span { font-weight: 400; font-size: 0.75rem; color: var(--sky2); opacity: 0.8; margin-left: 6px; }
+
+  .tabs-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    overflow-x: auto;
+    min-width: 0;
+  }
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--sky3);
+    font-size: 0.82rem;
+    cursor: pointer;
+    white-space: nowrap;
+    max-width: 160px;
+  }
+  .tab:hover { background: var(--panel2); }
+  .tab.active {
+    background: var(--panel2);
+    border-color: var(--border);
+    color: var(--sky);
+  }
+  .tab .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tab .close {
+    opacity: 0.5;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0 2px;
+  }
+  .tab .close:hover { opacity: 1; color: var(--danger); }
+
+  .header-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  button, .btn {
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 6px 11px;
+    background: var(--panel2);
+    color: var(--sky);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  button:hover, .btn:hover { border-color: var(--sky2); }
+  button.primary {
+    background: var(--sky2);
+    color: #04121f;
+    border-color: var(--sky2);
+    font-weight: 600;
+  }
+  button.primary:hover { background: var(--sky); border-color: var(--sky); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .main {
+    display: flex;
+    height: calc(100% - 48px);
+  }
+
+  .side {
+    width: 160px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .side label {
+    font-size: 0.72rem;
+    color: var(--sky2);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .side select, .side input[type="text"] {
+    width: 100%;
+    padding: 7px 8px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--sky);
+    font-family: inherit;
+    font-size: 0.85rem;
+  }
+  .side select:focus, .side input:focus { outline: none; border-color: var(--sky2); }
+
+  .side-actions {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .editor-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .toolbar .status {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--sky2);
+    opacity: 0.8;
+  }
+
+  .panes {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+  .pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .pane + .pane { border-left: 1px solid var(--border); }
+
+  textarea.editor {
+    flex: 1;
+    width: 100%;
+    resize: none;
+    border: none;
+    padding: 14px 16px;
+    background: var(--bg);
+    color: var(--sky3);
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    outline: none;
+  }
+  textarea.editor.plain {
+    font-family: var(--mono);
+  }
+
+  .preview {
+    flex: 1;
+    overflow: auto;
+    padding: 16px 18px;
+    background: #071022;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  .preview h1, .preview h2, .preview h3 { color: var(--sky); margin: 0.8em 0 0.4em; }
+  .preview p { margin: 0.5em 0; }
+  .preview code {
+    background: var(--panel2);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 0.85em;
+  }
+  .preview pre {
+    background: var(--panel2);
+    padding: 12px;
+    border-radius: 6px;
+    overflow: auto;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+  }
+  .preview a { color: var(--sky2); }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sky2);
+    opacity: 0.6;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 700px) {
+    .side { display: none; }
+    .panes { flex-direction: column; }
+    .pane + .pane { border-left: none; border-top: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Aplite <span>editor</span></div>
+  <div class="tabs-bar" id="tabsBar"></div>
+  <div class="header-actions">
+    <button id="newTabBtn" title="New tab">+ Tab</button>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="side">
+    <div>
+      <label>Mode</label>
+      <select id="modeSelect">
+        <option value="text">Text</option>
+        <option value="markdown">Markdown</option>
+        <option value="latex">LaTeX</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Tab name</label>
+      <input type="text" id="tabNameInput" placeholder="untitled" maxlength="40">
+    </div>
+
+    <div class="side-actions">
+      <button id="openHtmlBtn" title="Open current text as HTML in a new tab">Open as HTML</button>
+      <button id="downloadBtn">Download</button>
+      <button id="clearBtn">Clear tab</button>
+    </div>
+  </aside>
+
+  <div class="editor-wrap">
+    <div class="toolbar">
+      <span id="modeLabel">Text</span>
+      <span class="status" id="status">ready</span>
+    </div>
+    <div class="panes" id="panes">
+      <div class="pane">
+        <textarea class="editor plain" id="editor" spellcheck="false" placeholder="start typing..."></textarea>
+      </div>
+      <div class="pane" id="previewPane" style="display:none;">
+        <div class="preview" id="preview"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const LS_PREFIX = 'aplite.editor.';
+  const LS_TABS   = LS_PREFIX + 'tabs';
+  const LS_ACTIVE = LS_PREFIX + 'active';
+
+  let tabs = [];
+  let activeId = null;
+
+  const $ = id => document.getElementById(id);
+  const editor      = $('editor');
+  const preview     = $('preview');
+  const previewPane = $('previewPane');
+  const tabsBar     = $('tabsBar');
+  const modeSelect  = $('modeSelect');
+  const tabNameInput= $('tabNameInput');
+  const modeLabel   = $('modeLabel');
+  const statusEl    = $('status');
+  const openHtmlBtn = $('openHtmlBtn');
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function setStatus(msg, isError) {
+    statusEl.textContent = msg;
+    statusEl.style.color = isError ? 'var(--danger)' : '';
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(LS_TABS, JSON.stringify(tabs));
+      localStorage.setItem(LS_ACTIVE, activeId || '');
+      setStatus('saved');
+    } catch (e) {
+      setStatus('save failed', true);
+    }
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(LS_TABS);
+      tabs = raw ? JSON.parse(raw) : [];
+      activeId = localStorage.getItem(LS_ACTIVE) || null;
+    } catch (e) {
+      tabs = [];
+      activeId = null;
+    }
+    if (!tabs.length) {
+      addTab('untitled', 'text', '');
+    }
+    if (!tabs.find(t => t.id === activeId)) {
+      activeId = tabs[0].id;
+    }
+  }
+
+  function getActive() {
+    return tabs.find(t => t.id === activeId) || null;
+  }
+
+  function renderTabs() {
+    tabsBar.innerHTML = '';
+    tabs.forEach(t => {
+      const el = document.createElement('div');
+      el.className = 'tab' + (t.id === activeId ? ' active' : '');
+      el.innerHTML = '<span class="name"></span><span class="close" title="Close">×</span>';
+      el.querySelector('.name').textContent = t.name || 'untitled';
+      el.addEventListener('click', (e) => {
+        if (e.target.classList.contains('close')) {
+          closeTab(t.id);
+        } else {
+          switchTab(t.id);
+        }
+      });
+      tabsBar.appendChild(el);
+    });
+  }
+
+  function addTab(name, mode, content) {
+    const t = {
+      id: uid(),
+      name: name || 'untitled',
+      mode: mode || 'text',
+      content: content || ''
+    };
+    tabs.push(t);
+    activeId = t.id;
+    save();
+    renderTabs();
+    applyActive();
+  }
+
+  function closeTab(id) {
+    if (tabs.length === 1) {
+      const t = tabs[0];
+      t.name = 'untitled';
+      t.mode = 'text';
+      t.content = '';
+      activeId = t.id;
+    } else {
+      const idx = tabs.findIndex(t => t.id === id);
+      tabs = tabs.filter(t => t.id !== id);
+      if (activeId === id) {
+        activeId = tabs[Math.max(0, idx - 1)].id;
+      }
+    }
+    save();
+    renderTabs();
+    applyActive();
+  }
+
+  function switchTab(id) {
+    flushEditor();
+    activeId = id;
+    save();
+    renderTabs();
+    applyActive();
+  }
+
+  function flushEditor() {
+    const t = getActive();
+    if (!t) return;
+    t.content = editor.value;
+    t.name = tabNameInput.value.trim() || 'untitled';
+    t.mode = modeSelect.value;
+  }
+
+  function applyActive() {
+    const t = getActive();
+    if (!t) return;
+
+    editor.value = t.content || '';
+    tabNameInput.value = t.name || '';
+    modeSelect.value = t.mode || 'text';
+    modeLabel.textContent = (t.mode || 'text').charAt(0).toUpperCase() + (t.mode || 'text').slice(1);
+
+    if (t.mode === 'text') {
+      editor.classList.add('plain');
+    } else {
+      editor.classList.remove('plain');
+    }
+
+    const showPreview = t.mode === 'markdown' || t.mode === 'latex';
+    previewPane.style.display = showPreview ? '' : 'none';
+    openHtmlBtn.disabled = t.mode !== 'text';
+
+    updatePreview();
+    setStatus('ready');
+  }
+
+  function simpleMarkdown(src) {
+    let s = src
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    s = s.replace(/```([\s\S]*?)```/g, (_, code) => '<pre><code>' + code.trim() + '</code></pre>');
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+    s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    s = s.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    s = s.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    s = s.split(/\n{2,}/).map(p => {
+      if (/^<h[1-3]>/.test(p) || /^<pre>/.test(p)) return p;
+      return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+
+    return s;
+  }
+
+  function updatePreview() {
+    const t = getActive();
+    if (!t) return;
+
+    if (t.mode === 'markdown') {
+      preview.innerHTML = simpleMarkdown(editor.value);
+    } else if (t.mode === 'latex') {
+      preview.innerHTML = '<pre style="white-space:pre-wrap;font-family:var(--mono);font-size:0.85rem;color:var(--sky3)">' +
+        editor.value
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;') +
+        '</pre><p style="margin-top:12px;font-size:0.8rem;opacity:0.6">LaTeX preview is source-only while offline. Paste into Overleaf or a local renderer for full output.</p>';
+    }
+  }
+
+  $('newTabBtn').addEventListener('click', () => {
+    flushEditor();
+    addTab('untitled', 'text', '');
+  });
+
+  modeSelect.addEventListener('change', () => {
+    flushEditor();
+    const t = getActive();
+    if (t) t.mode = modeSelect.value;
+    save();
+    applyActive();
+  });
+
+  tabNameInput.addEventListener('input', () => {
+    const t = getActive();
+    if (t) {
+      t.name = tabNameInput.value.trim() || 'untitled';
+      renderTabs();
+      save();
+    }
+  });
+
+  editor.addEventListener('input', () => {
+    flushEditor();
+    save();
+    updatePreview();
+    setStatus('saved');
+  });
+
+  openHtmlBtn.addEventListener('click', () => {
+    const t = getActive();
+    if (!t || t.mode !== 'text') return;
+    const w = window.open('about:blank');
+    if (w) {
+      w.document.open();
+      w.document.write(editor.value);
+      w.document.close();
+    }
+  });
+
+  $('downloadBtn').addEventListener('click', () => {
+    const t = getActive();
+    if (!t) return;
+    const ext = t.mode === 'markdown' ? 'md' : t.mode === 'latex' ? 'tex' : 'txt';
+    const blob = new Blob([t.content || ''], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (t.name || 'untitled') + '.' + ext;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  $('clearBtn').addEventListener('click', () => {
+    if (!confirm('Clear this tab?')) return;
+    const t = getActive();
+    if (t) {
+      t.content = '';
+      editor.value = '';
+      save();
+      updatePreview();
+      setStatus('cleared');
+    }
+  });
+
+  load();
+  renderTabs();
+  applyActive();
+})();
+</script>
+</body>
+</html>
